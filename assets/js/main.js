@@ -29,7 +29,7 @@ const api="https://api.github.com/repos/"+REPO+"/contents/data/"+encodeURICompon
 const response=await fetch(api,{headers:{"Accept":"application/vnd.github+json"}});
 if(!response.ok)throw new Error("Data folder request failed: "+response.status);
 const files=await response.json();if(!Array.isArray(files))throw new Error("Data folder listing not available");
-const jsonFiles=files.filter(f=>f.type==="file"&&f.name.toLowerCase().endsWith(".json")&&!f.name.toLowerCase().includes("template"));
+const jsonFiles=files.filter(f=>f.type==="file"&&f.name.toLowerCase().endsWith(".json"));
 const values=await Promise.all(jsonFiles.map(async f=>{const r=await fetch(f.download_url||("https://raw.githubusercontent.com/"+REPO+"/"+BRANCH+"/data/"+folder+"/"+f.name));if(!r.ok)throw new Error("Cannot load "+f.name);return r.json()}));
 return values.flatMap(v=>Array.isArray(v)?v:[v]).filter(Boolean);
 }
@@ -39,28 +39,10 @@ function teacherHtml(t){return '<article class="teacher-card reveal" data-filter
 function studentHtml(s){const initials=String(s.name||"Example Student").split(/\s+/).slice(0,2).map(v=>v[0]).join("").toUpperCase();const cat=String(s.grade||"other").toLowerCase().replace(/[^a-z0-9]+/g,"-");return '<article class="student-record reveal" data-filter-card data-category="'+esc(cat)+'"><div class="student-record-head"><span class="student-avatar">'+esc(initials)+'</span><div><h3>'+esc(s.name||"Example Student")+'</h3><p>'+esc(s.student_id||"DEMO-ID")+' · '+esc(s.grade||"Class —")+'</p></div></div><div class="student-metrics"><div class="student-metric"><span>Section / roll</span><b>'+esc(s.section||"—")+' / '+esc(s.roll||"—")+'</b></div><div class="student-metric"><span>Attendance</span><b>'+esc(s.attendance??"—")+(s.attendance!==undefined?"%":"")+'</b></div><div class="student-metric"><span>Learning status</span><b>'+esc(s.status||"Example")+'</b></div><div class="student-metric"><span>Focus area</span><b>'+esc(s.focus||"General learning")+'</b></div></div><p style="font-size:.73rem;margin:12px 0 0">'+esc(s.note||"Fictional demo data only.")+'</p></article>';}
 function commentHtml(c){return '<article class="comment-card"><div class="comment-top"><div class="comment-author"><span class="comment-avatar">'+esc(String(c.author||"G").slice(0,1).toUpperCase())+'</span><span><b>'+esc(c.author||"Example Guardian")+'</b><small>'+esc(c.date||"Sample comment")+'</small></span></div><span class="tag blue">'+esc(c.category||"Community")+'</span></div><p>'+esc(c.comment||c.message||"")+'</p>'+(c.response?'<div class="comment-response"><b>Example school response</b>'+esc(c.response)+'</div>':"")+'</article>';}
 function filters(scope){
-if(!scope)return;
-scope.querySelectorAll("[data-filter-group]").forEach(group=>{
- const region=group.closest("[data-filter-scope]")||group.parentElement||document;
- if(group.dataset.handlers!=="1"){
-   group.dataset.filter="all";group.dataset.query="";
-   group.querySelectorAll("[data-filter]").forEach(button=>button.addEventListener("click",()=>{
-     group.querySelectorAll("[data-filter]").forEach(x=>x.classList.toggle("active",x===button));
-     group.dataset.filter=button.dataset.filter||"all";filters(region);
-   }));
-   const search=region.querySelector("[data-search-input]");
-   if(search&&!search.dataset.filterHooked){search.dataset.filterHooked="1";search.addEventListener("input",()=>{group.dataset.query=search.value.trim().toLowerCase();filters(region);});}
-   group.dataset.handlers="1";
- }
- const filter=group.dataset.filter||"all",query=group.dataset.query||"";
- const cards=[...region.querySelectorAll("[data-filter-card]")];let count=0;
- cards.forEach(card=>{
-   const cat=String(card.dataset.category||"general").toLowerCase(),text=(card.innerText||"").toLowerCase();
-   const filterOk=filter==="all"||cat===filter||(filter==="urgent"&&card.querySelector(".notice-label.urgent"));
-   const matches=filterOk&&(!query||text.includes(query));card.hidden=!matches;if(matches)count++;
- });
- const empty=region.querySelector("[data-empty-state]");if(empty)empty.hidden=count>0;
-});
+if(!scope)return;scope.querySelectorAll("[data-filter-group]").forEach(group=>{if(group.dataset.ready==="1")return;group.dataset.ready="1";const buttons=[...group.querySelectorAll("[data-filter]")],search=scope.querySelector("[data-search-input]"),cards=[...scope.querySelectorAll("[data-filter-card]")];let filter="all",query="";
+const apply=()=>{let count=0;cards.forEach(card=>{const cat=String(card.dataset.category||"general").toLowerCase(),text=(card.innerText||"").toLowerCase();const ok=(filter==="all"||cat===filter||(filter==="urgent"&&card.querySelector(".notice-label.urgent")))&&(!query||text.includes(query));card.hidden=!ok;if(ok)count++});const empty=scope.querySelector("[data-empty-state]");if(empty)empty.hidden=count>0;};
+buttons.forEach(b=>b.addEventListener("click",()=>{buttons.forEach(x=>x.classList.toggle("active",x===b));filter=b.dataset.filter||"all";apply()}));
+if(search&&!search.dataset.ready){search.dataset.ready="1";search.addEventListener("input",()=>{query=search.value.trim().toLowerCase();apply()})}apply();});
 }
 async function populate(folder,id,renderer,limit){const root=$(id);if(!root)return[];try{let list=await loadCollection(folder);list.sort((a,b)=>String(b.date||b.name||"").localeCompare(String(a.date||a.name||"")));if(limit)list=list.slice(0,limit);root.innerHTML=list.length?list.map(renderer).join(""):'<div class="empty-state">No items yet. Add JSON files in data/'+esc(folder)+'/.</div>';filters(root.closest("[data-filter-scope]")||root.parentElement);reveals(root);const count=$(id+"-count");if(count)count.textContent=list.length;return list}catch(e){console.error("Unable to load "+folder,e);dataError(root,folder);return[]}}
 function reveals(scope=document){const items=scope.querySelectorAll(".reveal:not(.in-view)");if(matchMedia("(prefers-reduced-motion: reduce)").matches||!("IntersectionObserver"in window)){items.forEach(x=>x.classList.add("in-view"));return}const io=new IntersectionObserver(entries=>entries.forEach(en=>{if(en.isIntersecting){en.target.classList.add("in-view");io.unobserve(en.target)}}),{threshold:.08,rootMargin:"0px 0px -15px 0px"});items.forEach(x=>io.observe(x));}
