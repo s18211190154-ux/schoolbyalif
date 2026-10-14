@@ -31,10 +31,10 @@ window.SCHOOL_CONFIG = {
   teacher6:"https://images.unsplash.com/photo-1551836022-4c4c79ecde51?auto=format&fit=crop&w=700&q=85"
  },
  noticeImages:{
-  "assessment-reminder":"",
-  "family-day":"",
-  "club-sign-up":"",
-  "guardian-meeting":""
+  "NOTICE-DEMO-001":"", /* Assessment reminder image URL */
+  "NOTICE-DEMO-002":"", /* Family day image URL */
+  "NOTICE-DEMO-003":"", /* Student club sign-up image URL */
+  "NOTICE-DEMO-004":""  /* Guardian-teacher meeting image URL */
  },
  teacherImages:{
   /* "teacher-id-or-name-slug":"https://your-site.com/teacher.jpg" */
