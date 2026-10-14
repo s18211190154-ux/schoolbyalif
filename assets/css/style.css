@@ -357,4 +357,13 @@ a{color:inherit}
  .filter-bar{border-radius:18px}
 }
 @media(prefers-reduced-motion:reduce){body:before,.hero-v3-photo:before{animation:none!important}*{scroll-behavior:auto!important}}
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+/* Stronger frosted-glass finish inspired by the supplied XML's appearance */
+:root{--school-background-image:none;--glass:rgba(255,255,255,.105);--glass-line:rgba(255,255,255,.28)}
+body{background-image:linear-gradient(115deg,rgba(13,12,42,.80),rgba(8,38,58,.76)),var(--school-background-image),radial-gradient(ellipse at 10% 5%,rgba(139,92,246,.30),transparent 36%),radial-gradient(ellipse at 90% 90%,rgba(6,182,212,.26),transparent 38%);background-size:cover,cover,cover,cover;background-position:center;background-attachment:fixed}
+.site-header,.hero-v3-copy,.page-hero-grid>div:first-child,.photo-glass-note,.card,.quick-card,.notice-card,.teacher-card,.student-record,.comment-card,.panel,.search-box,.notice-highlight,.contact-card,.contact-method,.filter-bar,.data-table,.site-footer,.field input,.field select,.field textarea,.nav-more-menu,.nav-links{backdrop-filter:blur(28px) saturate(165%);-webkit-backdrop-filter:blur(28px) saturate(165%)}
+.hero-v3-copy,.page-hero-grid>div:first-child{background:linear-gradient(135deg,rgba(255,255,255,.15),rgba(255,255,255,.055));border:1px solid rgba(255,255,255,.32);box-shadow:0 22px 64px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.22)}
+.card,.quick-card,.notice-card,.teacher-card,.student-record,.comment-card,.panel,.contact-card,.contact-method,.photo-card,.notice,.stat,.step,.faq-list details{background:linear-gradient(145deg,rgba(255,255,255,.135),rgba(255,255,255,.055));border:1px solid rgba(255,255,255,.25);box-shadow:0 16px 42px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.13)}
+:root[data-theme=light] .card,:root[data-theme=light] .quick-card,:root[data-theme=light] .notice-card,:root[data-theme=light] .teacher-card,:root[data-theme=light] .student-record,:root[data-theme=light] .comment-card,:root[data-theme=light] .panel,:root[data-theme=light] .contact-card,:root[data-theme=light] .contact-method,:root[data-theme=light] .photo-card,:root[data-theme=light] .notice,:root[data-theme=light] .stat,:root[data-theme=light] .step,:root[data-theme=light] .faq-list details{background:linear-gradient(145deg,rgba(255,255,255,.82),rgba(255,255,255,.47));border-color:rgba(255,255,255,.94);box-shadow:0 16px 42px rgba(49,62,115,.11),inset 0 1px 0 rgba(255,255,255,.94)}
+.notice-card img{display:block;border:1px solid rgba(255,255,255,.28);box-shadow:0 8px 28px rgba(0,0,0,.18)}
+.student-photo{width:58px;height:58px;object-fit:cover;border-radius:50%;border:1px solid rgba(255,255,255,.5);box-shadow:0 5px 18px rgba(0,0,0,.18)}
+@media(max-width:520px){body{background-attachment:scroll}}
