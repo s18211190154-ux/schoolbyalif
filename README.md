@@ -1,6 +1,9 @@
 # School by Alif — light and responsive school website
 
-A multi-page school site built with HTML/CSS/JavaScript: light-first theme with optional dark mode, white/ivory backgrounds, sage green and sky-blue accents, readable Plus Jakarta Sans + DM Sans typography, subtle frosted-glass panels, responsive layouts and reduced-motion-aware transitions.
+A multi-page school site built with HTML/CSS/JavaScript: light-first theme with optional dark mode, a soft blue-white background, teal and blue accents, Plus Jakarta Sans + DM Sans typography, frosted-glass navigation/cards/forms/page headers, responsive layouts and reduced-motion-aware transitions. Headings use plain labels so visitors can find sections quickly.
+
+## Page labels and navigation
+Navigation uses clear labels: Home, Notices, Teachers, Students, Families and Explore. Page headings describe their content directly.
 
 ## Pages
 Home, Notices, Teachers, Students (fictional demo records), Guardians (sample comments), Complaints & Feedback, About, Academics, Campus Life, News, Admissions, Contact, Privacy, Accessibility and a 404 page.
