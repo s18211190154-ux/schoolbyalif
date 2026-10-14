@@ -11,7 +11,7 @@ The site reads public GitHub folder listings and loads JSON files automatically:
 - `data/students/`: **fictional demo records only in this public repository**
 - `data/guardian-comments/`: fictional sample comments only
 
-To add a notice, copy `data/notices/notice-template.json`, name the new file (e.g. `2026-11-03-holiday.json`), edit the fields, and commit it to `main`. On next page load the site lists the folder, reads the JSON files, and displays the new notice without editing page HTML. Use the same one-file-per-entry pattern for teacher and example student records.
+To add a notice, upload either (A) a `.json` file with title/date/category/summary, or (B) a notice image (`.jpg`, `.jpeg`, `.png`, `.webp`) or PDF directly into `data/notices/`. Commit to `main`; on next page load the site scans the folder and displays the new file automatically. Image/PDF filenames become the title, and dates are inferred from a `YYYY-MM-DD` prefix when present. For richer descriptions, pair an asset with a JSON file. Use one JSON file per teacher or example student record.
 
 Notice fields: `id`, `title`, `date` (YYYY-MM-DD), `category` (urgent, academic, events, general), `priority`, `summary`, `audience`, optional `attachment` or `link`.
 

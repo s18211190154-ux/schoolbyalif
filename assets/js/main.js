@@ -11,7 +11,7 @@ try{setTheme(localStorage.getItem("schoolbyalif-theme")||"light")}catch{setTheme
 function header(){return '<div class="container nav-wrap"><a class="brand" href="index.html" aria-label="School by Alif home"><span class="brand-mark">SA</span><span class="brand-copy"><strong data-school-name>School by Alif</strong><small>LEARN · GROW · BELONG</small></span></a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">☰ <span>Menu</span></button><nav class="nav-links" id="site-nav" aria-label="Main navigation"><a href="index.html">Home</a><a href="notices.html">Notices</a><a href="teachers.html">Teachers</a><a href="students.html">Students</a><a href="guardians.html">Guardians</a><div class="nav-more"><button type="button" class="nav-more-button" aria-expanded="false">School <span aria-hidden="true">⌄</span></button><div class="nav-more-menu"><a href="about.html">About the school</a><a href="academics.html">Academics</a><a href="campus-life.html">Campus life</a><a href="news.html">News & events</a><a href="admissions.html">Admissions</a><a href="complaints.html">Complaints & feedback</a><a href="contact.html">Contact</a></div></div></nav><div class="nav-utility"><button type="button" class="theme-toggle" id="theme-toggle">☾ <span>Dark</span></button><a class="btn btn-sm nav-cta" href="admissions.html">Admissions ↗</a></div></div>';}
 function footer(){return '<div class="container"><div class="footer-grid"><div class="footer-brand"><a class="brand" href="index.html"><span class="brand-mark">SA</span><span class="brand-copy"><strong data-school-name>School by Alif</strong><small>LEARN · GROW · BELONG</small></span></a><p>A clear, welcoming school website for students, teachers and families — all in one place.</p><div class="social-row"><a href="#" aria-label="Facebook">f</a><a href="#" aria-label="Instagram">◎</a><a href="#" aria-label="YouTube">▶</a></div></div><div class="footer-col"><h3>Explore</h3><a href="about.html">About the school</a><a href="academics.html">Academics</a><a href="campus-life.html">Campus life</a><a href="news.html">News & events</a><a href="admissions.html">Admissions</a></div><div class="footer-col"><h3>School community</h3><a href="notices.html">Notice board</a><a href="teachers.html">Teacher directory</a><a href="students.html">Student information</a><a href="guardians.html">Guardian comments</a><a href="complaints.html">Complaints & feedback</a></div><div class="footer-col"><h3>Contact</h3><a data-contact-address href="contact.html">School address</a><a data-contact-phone href="tel:+8801000000000">School phone</a><a data-contact-email href="mailto:hello@schoolbyalif.example">School email</a><p style="font-size:.69rem;margin-top:10px">Contact details are examples.</p></div></div><div class="footer-bottom"><span>© <span data-year></span> <span data-school-name>School by Alif</span>. Sample website content.</span><span><a href="privacy.html">Privacy</a><a href="accessibility.html">Accessibility</a></span></div></div>';}
 function setupShell(){
-document.querySelector(".site-header")?.replaceChildren();const h=document.querySelector(".site-header");if(h)h.innerHTML=header();const f=document.querySelector(".site-footer");if(f)f.innerHTML=footer();
+document.querySelector(".site-header")?.replaceChildren();const h=document.querySelector(".site-header");if(h)h.innerHTML=header();const f=document.querySelector(".site-footer");if(f)f.innerHTML=footer();setTheme(document.documentElement.dataset.theme||"light");
 document.querySelectorAll("[data-school-name]").forEach(e=>e.textContent=C.name||"School by Alif");document.querySelectorAll("[data-year]").forEach(e=>e.textContent=new Date().getFullYear());
 document.querySelectorAll("[data-contact-phone]").forEach(e=>{e.textContent=C.phone||"Add school phone";if(e.tagName==="A")e.href="tel:"+String(C.phone||"").replace(/[^+0-9]/g,"")});
 document.querySelectorAll("[data-contact-email]").forEach(e=>{e.textContent=C.email||"Add school email";if(e.tagName==="A")e.href="mailto:"+C.email});
@@ -29,20 +29,66 @@ const api="https://api.github.com/repos/"+REPO+"/contents/data/"+encodeURICompon
 const response=await fetch(api,{headers:{"Accept":"application/vnd.github+json"}});
 if(!response.ok)throw new Error("Data folder request failed: "+response.status);
 const files=await response.json();if(!Array.isArray(files))throw new Error("Data folder listing not available");
-const jsonFiles=files.filter(f=>f.type==="file"&&f.name.toLowerCase().endsWith(".json"));
-const values=await Promise.all(jsonFiles.map(async f=>{const r=await fetch(f.download_url||("https://raw.githubusercontent.com/"+REPO+"/"+BRANCH+"/data/"+folder+"/"+f.name));if(!r.ok)throw new Error("Cannot load "+f.name);return r.json()}));
-return values.flatMap(v=>Array.isArray(v)?v:[v]).filter(Boolean);
+const usable=files.filter(f=>f.type==="file"&&!f.name.toLowerCase().includes("template"));
+const jsonFiles=usable.filter(f=>f.name.toLowerCase().endsWith(".json"));
+const records=await Promise.all(jsonFiles.map(async f=>{
+ const r=await fetch(f.download_url||("https://raw.githubusercontent.com/"+REPO+"/"+BRANCH+"/data/"+folder+"/"+f.name));
+ if(!r.ok)throw new Error("Cannot load "+f.name);
+ return r.json();
+}));
+const structured=records.flatMap(v=>Array.isArray(v)?v:[v]).filter(Boolean);
+if(folder!=="notices")return structured;
+const attachments=usable.filter(f=>/\.(pdf|png|jpe?g|webp)$/i.test(f.name)).map(f=>{
+ const stem=f.name.replace(/\.[^.]+$/,"");
+ const rawDate=(f.name.match(/\d{4}-\d{2}-\d{2}/)||[])[0]||"";
+ const pretty=stem.replace(/^\d{4}-\d{2}-\d{2}[-_]?/,"").replace(/[-_]+/g," ").replace(/\b\w/g,ch=>ch.toUpperCase());
+ const lower=f.name.toLowerCase();
+ const category=/urgent|important|emergency/.test(lower)?"urgent":/exam|assessment|result|academic/.test(lower)?"academic":/event|meeting|holiday|sports/.test(lower)?"events":"general";
+ const image=/\.(png|jpe?g|webp)$/i.test(f.name);
+ return {id:"FILE-"+f.name,title:pretty||f.name,date:rawDate,category,priority:category==="urgent"?"important":"normal",label:image?"Notice image":"Notice attachment",summary:image?"Image notice uploaded to the notices folder. Add a matching JSON file if you want a longer description.":"Document uploaded to the notices folder. Open the attachment to read the full notice.",audience:"School community",attachment:f.download_url||f.html_url,image:image?(f.download_url||f.html_url):"",fileName:f.name};
+});
+return [...structured,...attachments];
 }
 function dataError(root,folder){if(root)root.innerHTML='<div class="demo-alert"><strong>Could not load this data folder.</strong> Check the JSON files or <a class="text-link" href="https://github.com/'+esc(REPO)+'/tree/'+esc(BRANCH)+'/data/'+esc(folder)+'">open the folder on GitHub ↗</a>, then reload this page.</div>';}
-function noticeHtml(n){const cat=String(n.category||"general").toLowerCase(),cls=cat==="urgent"||n.priority==="urgent"?"urgent":cat==="events"?"event":cat==="academic"?"academic":"";const attachment=n.attachment?'<p style="margin-top:12px"><a class="text-link" href="'+esc(safeUrl(n.attachment))+'" target="_blank" rel="noopener">Open attachment ↗</a></p>':n.link?'<p style="margin-top:12px"><a class="text-link" href="'+esc(safeUrl(n.link))+'">Read more ↗</a></p>':"";return '<article class="notice-card reveal" data-filter-card data-category="'+esc(cat)+'"><div class="notice-card-top"><span class="notice-label '+cls+'">'+esc(n.label||cat)+'</span><span class="notice-date">'+esc(dateLabel(n.date))+'</span></div><h3>'+esc(n.title)+'</h3><p>'+esc(n.summary||n.description||"")+'</p><div class="notice-meta"><span>'+esc(n.audience||"School community")+'</span><span>'+esc(n.id||"Sample notice")+'</span></div>'+attachment+'</article>';}
+function noticeHtml(n){
+const cat=String(n.category||"general").toLowerCase();
+const cls=cat==="urgent"||n.priority==="urgent"?"urgent":cat==="events"?"event":cat==="academic"?"academic":"";
+const image=n.image?'<a href="'+esc(safeUrl(n.attachment||n.image))+'" target="_blank" rel="noopener"><img src="'+esc(safeUrl(n.image))+'" alt="'+esc(n.title||"Uploaded school notice")+'" loading="lazy" style="width:100%;max-height:240px;object-fit:contain;background:var(--surface-soft);border-radius:11px;margin:13px 0"></a>':"";
+const attachment=n.attachment?'<p style="margin-top:11px"><a class="text-link" href="'+esc(safeUrl(n.attachment))+'" target="_blank" rel="noopener">'+esc(n.fileType==="pdf"||String(n.attachment).toLowerCase().includes(".pdf")?"Open notice PDF ↗":(n.image?"Open full-size notice image ↗":"Open notice attachment ↗"))+'</a></p>':n.link?'<p style="margin-top:11px"><a class="text-link" href="'+esc(safeUrl(n.link))+'">Read more ↗</a></p>':"";
+return '<article class="notice-card reveal" data-filter-card data-category="'+esc(cat)+'"><div class="notice-card-top"><span class="notice-label '+cls+'">'+esc(n.label||cat)+'</span><span class="notice-date">'+esc(dateLabel(n.date))+'</span></div><h3>'+esc(n.title||n.fileName||"School notice")+'</h3><p>'+esc(n.summary||n.description||"")+'</p>'+image+'<div class="notice-meta"><span>'+esc(n.audience||"School community")+'</span><span>'+esc(n.id||"Sample notice")+'</span></div>'+attachment+'</article>';
+}
 function teacherHtml(t){return '<article class="teacher-card reveal" data-filter-card data-category="'+esc(String(t.department||t.subject||"general").toLowerCase())+'"><img src="'+esc(safeUrl(t.photo||C.images?.teacher1||""))+'" alt="'+esc("Example portrait of "+(t.name||"teacher"))+'" loading="lazy"><div class="teacher-info"><span class="tag">'+esc(t.department||"Faculty")+'</span><h3>'+esc(t.name||"Example Teacher")+'</h3><div class="role">'+esc(t.role||t.subject||"Teacher")+'</div><p>'+esc(t.bio||"")+'</p></div></article>';}
 function studentHtml(s){const initials=String(s.name||"Example Student").split(/\s+/).slice(0,2).map(v=>v[0]).join("").toUpperCase();const cat=String(s.grade||"other").toLowerCase().replace(/[^a-z0-9]+/g,"-");return '<article class="student-record reveal" data-filter-card data-category="'+esc(cat)+'"><div class="student-record-head"><span class="student-avatar">'+esc(initials)+'</span><div><h3>'+esc(s.name||"Example Student")+'</h3><p>'+esc(s.student_id||"DEMO-ID")+' · '+esc(s.grade||"Class —")+'</p></div></div><div class="student-metrics"><div class="student-metric"><span>Section / roll</span><b>'+esc(s.section||"—")+' / '+esc(s.roll||"—")+'</b></div><div class="student-metric"><span>Attendance</span><b>'+esc(s.attendance??"—")+(s.attendance!==undefined?"%":"")+'</b></div><div class="student-metric"><span>Learning status</span><b>'+esc(s.status||"Example")+'</b></div><div class="student-metric"><span>Focus area</span><b>'+esc(s.focus||"General learning")+'</b></div></div><p style="font-size:.73rem;margin:12px 0 0">'+esc(s.note||"Fictional demo data only.")+'</p></article>';}
 function commentHtml(c){return '<article class="comment-card"><div class="comment-top"><div class="comment-author"><span class="comment-avatar">'+esc(String(c.author||"G").slice(0,1).toUpperCase())+'</span><span><b>'+esc(c.author||"Example Guardian")+'</b><small>'+esc(c.date||"Sample comment")+'</small></span></div><span class="tag blue">'+esc(c.category||"Community")+'</span></div><p>'+esc(c.comment||c.message||"")+'</p>'+(c.response?'<div class="comment-response"><b>Example school response</b>'+esc(c.response)+'</div>':"")+'</article>';}
 function filters(scope){
-if(!scope)return;scope.querySelectorAll("[data-filter-group]").forEach(group=>{if(group.dataset.ready==="1")return;group.dataset.ready="1";const buttons=[...group.querySelectorAll("[data-filter]")],search=scope.querySelector("[data-search-input]"),cards=[...scope.querySelectorAll("[data-filter-card]")];let filter="all",query="";
-const apply=()=>{let count=0;cards.forEach(card=>{const cat=String(card.dataset.category||"general").toLowerCase(),text=(card.innerText||"").toLowerCase();const ok=(filter==="all"||cat===filter||(filter==="urgent"&&card.querySelector(".notice-label.urgent")))&&(!query||text.includes(query));card.hidden=!ok;if(ok)count++});const empty=scope.querySelector("[data-empty-state]");if(empty)empty.hidden=count>0;};
-buttons.forEach(b=>b.addEventListener("click",()=>{buttons.forEach(x=>x.classList.toggle("active",x===b));filter=b.dataset.filter||"all";apply()}));
-if(search&&!search.dataset.ready){search.dataset.ready="1";search.addEventListener("input",()=>{query=search.value.trim().toLowerCase();apply()})}apply();});
+if(!scope)return;
+scope.querySelectorAll("[data-filter-group]").forEach(group=>{
+ const region=group.closest("[data-filter-scope]")||group.parentElement||document;
+ if(group.dataset.handlers!=="1"){
+   group.dataset.activeFilter="all";group.dataset.activeQuery="";
+   group.querySelectorAll("[data-filter]").forEach(button=>button.addEventListener("click",()=>{
+     group.querySelectorAll("[data-filter]").forEach(item=>item.classList.toggle("active",item===button));
+     group.dataset.activeFilter=button.dataset.filter||"all";
+     filters(region);
+   }));
+   const search=region.querySelector("[data-search-input]");
+   if(search&&!search.dataset.filterHooked){
+     search.dataset.filterHooked="1";
+     search.addEventListener("input",()=>{group.dataset.activeQuery=search.value.trim().toLowerCase();filters(region);});
+   }
+   group.dataset.handlers="1";
+ }
+ const activeFilter=group.dataset.activeFilter||"all",query=group.dataset.activeQuery||"";
+ const cards=[...region.querySelectorAll("[data-filter-card]")];let visible=0;
+ cards.forEach(card=>{
+   const category=String(card.dataset.category||"general").toLowerCase();
+   const content=(card.innerText||"").toLowerCase();
+   const categoryMatch=activeFilter==="all"||category===activeFilter||(activeFilter==="urgent"&&!!card.querySelector(".notice-label.urgent"));
+   const matches=categoryMatch&&(!query||content.includes(query));
+   card.hidden=!matches;if(matches)visible++;
+ });
+ const empty=region.querySelector("[data-empty-state]");if(empty)empty.hidden=visible!==0;
+});
 }
 async function populate(folder,id,renderer,limit){const root=$(id);if(!root)return[];try{let list=await loadCollection(folder);list.sort((a,b)=>String(b.date||b.name||"").localeCompare(String(a.date||a.name||"")));if(limit)list=list.slice(0,limit);root.innerHTML=list.length?list.map(renderer).join(""):'<div class="empty-state">No items yet. Add JSON files in data/'+esc(folder)+'/.</div>';filters(root.closest("[data-filter-scope]")||root.parentElement);reveals(root);const count=$(id+"-count");if(count)count.textContent=list.length;return list}catch(e){console.error("Unable to load "+folder,e);dataError(root,folder);return[]}}
 function reveals(scope=document){const items=scope.querySelectorAll(".reveal:not(.in-view)");if(matchMedia("(prefers-reduced-motion: reduce)").matches||!("IntersectionObserver"in window)){items.forEach(x=>x.classList.add("in-view"));return}const io=new IntersectionObserver(entries=>entries.forEach(en=>{if(en.isIntersecting){en.target.classList.add("in-view");io.unobserve(en.target)}}),{threshold:.08,rootMargin:"0px 0px -15px 0px"});items.forEach(x=>io.observe(x));}
