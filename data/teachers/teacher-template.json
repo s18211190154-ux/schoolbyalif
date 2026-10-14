@@ -1,0 +1,9 @@
+{
+  "id": "TEACHER-001",
+  "name": "Teacher Example",
+  "role": "Subject Teacher",
+  "subject": "Subject name",
+  "department": "Primary",
+  "photo": "https://example.com/teacher-photo.jpg",
+  "bio": "A short approved public staff biography."
+}

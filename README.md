@@ -1,38 +1,33 @@
-# School by Alif · Glass Edition
-
-A responsive, animated, multi-page school website built with plain HTML, CSS and JavaScript.
+# School by Alif — Light Edition
+A mobile-optimised, multi-page school website using HTML, CSS and vanilla JavaScript. Clean white/ivory surfaces, readable Plus Jakarta Sans + DM Sans typography, green and sky-blue accents, subtle glass panels, light/dark mode, and reduced-motion-aware animations.
 
 ## Pages
-- Home
-- About
-- Academics
-- Admissions
-- Campus life
-- News and events
-- **Notices and announcements**
-- **Teacher directory**
-- **Student hub**
-- **Guardian hub**
-- **Complaints and feedback**
-- Contact
-- Privacy
-- Accessibility
+Home, Notices, Teachers, Students (demo records), Guardians (comments preview), Complaints & Feedback, About, Academics, Campus Life, News, Admissions, Contact, Privacy, Accessibility.
 
-## Visual system
-- Frosted-glass panels, layered gradients and ambient aurora backgrounds
-- Sora display typography and DM Sans body typography
-- Animated gradient headline, float effects, shimmer edges, scroll reveals, count-up numbers, scrolling value ticker, pointer spotlight, reading-progress bar and back-to-top control
-- Mobile-first navigation and responsive cards
-- Respects reduced-motion settings
-- Shared settings and example image URLs in `assets/js/site-config.js`
+## Automatically add content via folders
+The site reads public GitHub folder listings and loads JSON files automatically:
+- `data/notices/`: public school notices
+- `data/teachers/`: approved staff-directory profiles
+- `data/students/`: **fictional demo records only in this public repository**
+- `data/guardian-comments/`: fictional sample comments only
 
-## Customize
-1. Edit `assets/js/site-config.js`: school name, contact details, office hours and example image URLs.
-2. Replace all sample notices, dates, faculty names/photos, and example school policy information with verified content.
-3. Review Privacy and Accessibility pages before public use.
-4. Connect forms only to an approved secure form service or backend. All contact, guardian and complaint forms in this demo are front-end previews: they do not transmit or store submissions.
-5. Do not add private student records to these static public pages. Student and guardian sections are information hubs, not authenticated portals.
+To add a notice, copy `data/notices/notice-template.json`, name the new file (e.g. `2026-11-03-holiday.json`), edit the fields, and commit it to `main`. On next page load the site lists the folder, reads the JSON files, and displays the new notice without editing page HTML. Use the same one-file-per-entry pattern for teacher and example student records.
 
-## Publish
-GitHub Pages: Repository **Settings → Pages → Deploy from a branch → main → /(root) → Save**.
-The project needs no build step or Node.js.
+Notice fields: `id`, `title`, `date` (YYYY-MM-DD), `category` (urgent, academic, events, general), `priority`, `summary`, `audience`, optional `attachment` or `link`.
+
+## Important privacy note
+This repository and GitHub Pages site are public. All current student records and guardian comments are fictional examples. **Never add real student names, IDs, class/roll numbers, attendance, grades, reports, guardian details, confidential comments, or complaints to public folders.** Real student data needs authentication, server-side access controls, and a private database. Do not put private records inside JavaScript or ship them to the browser on a public site.
+
+Guardian comments, contact, admissions and complaint forms are previews. The guardian comment form adds an on-screen demonstration only; it is not saved or submitted. Connect secure form/backend services before use.
+
+## Customising
+- Name, official contact details, images and data-source settings: `assets/js/site-config.js`.
+- Theme, responsive layout and animation: `assets/css/style.css`.
+- Data loading, theme switch, menus, search and renderers: `assets/js/main.js`.
+
+GitHub Pages should be enabled at Settings → Pages → Deploy from a branch → `main` → `/(root)`.
+
+## Design references
+School site usability and keeping information current: https://www.schudio.com/what-parents-actually-notice-on-a-school-website/
+W3C accessibility and contrast guidance: https://www.w3.org/TR/WCAG21/
+W3C reduced-motion guidance: https://www.w3.org/WAI/WCAG21/Understanding/animation-from-interactions

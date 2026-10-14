@@ -1,0 +1,12 @@
+{
+  "id": "STUDENT-DEMO-003",
+  "name": "Example Student C",
+  "student_id": "DEMO-1003",
+  "grade": "Class 8",
+  "section": "A",
+  "roll": "03",
+  "attendance": 98,
+  "status": "Example profile",
+  "focus": "Science",
+  "note": "Fictional demonstration record. Not a real learner."
+}

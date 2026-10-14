@@ -1,0 +1,10 @@
+{
+  "id": "NOTICE-001",
+  "title": "Example notice title",
+  "date": "2026-11-03",
+  "category": "general",
+  "priority": "normal",
+  "summary": "Replace this with the announcement text families need to know.",
+  "audience": "School community",
+  "label": "General notice"
+}

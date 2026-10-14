@@ -1,0 +1,10 @@
+{
+  "id": "NOTICE-DEMO-001",
+  "title": "Sample: term assessment schedule reminder",
+  "date": "2026-10-18",
+  "category": "urgent",
+  "priority": "important",
+  "summary": "Example notice reminding students and guardians to review the official assessment timetable and teacher instructions.",
+  "audience": "Students and guardians",
+  "label": "Important reminder"
+}

@@ -1,216 +1,53 @@
 (() => {
-  const config = window.SCHOOL_CONFIG || {};
-  const schoolName = config.name || "School by Alif";
-  const onReady = (fn) => document.readyState === "loading"
-    ? document.addEventListener("DOMContentLoaded", fn, { once: true }) : fn();
-
-  onReady(() => {
-    document.body.classList.add("motion-ready");
-    // Ambient glass layers and reading progress
-    if (!document.querySelector(".ambient-scene")) {
-      const ambient = document.createElement("div");
-      ambient.className = "ambient-scene";
-      ambient.setAttribute("aria-hidden", "true");
-      ambient.innerHTML = '<span class="ambient-orb orb-a"></span><span class="ambient-orb orb-b"></span><span class="ambient-orb orb-c"></span>';
-      document.body.prepend(ambient);
-    }
-    if (!document.getElementById("scroll-progress")) {
-      const bar = document.createElement("div"); bar.id = "scroll-progress"; bar.setAttribute("aria-hidden", "true"); document.body.append(bar);
-    }
-    if (!document.querySelector(".pointer-halo")) {
-      const halo = document.createElement("div"); halo.className = "pointer-halo"; halo.setAttribute("aria-hidden", "true"); document.body.append(halo);
-    }
-    if (!document.getElementById("back-to-top")) {
-      const top = document.createElement("button"); top.id = "back-to-top"; top.type = "button"; top.setAttribute("aria-label", "Back to top"); top.textContent = "↑"; document.body.append(top);
-      top.addEventListener("click", () => window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }));
-    }
-
-    document.querySelectorAll("[data-school-name]").forEach(el => el.textContent = schoolName);
-    document.querySelectorAll("[data-school-tagline]").forEach(el => el.textContent = config.tagline || "");
-    document.querySelectorAll("[data-image]").forEach(img => {
-      const key = img.getAttribute("data-image");
-      const url = config.images && config.images[key];
-      if (url) img.src = url;
-      img.addEventListener("error", () => { img.classList.add("image-failed"); img.alt = (img.alt || "Example image") + " — replace image URL in assets/js/site-config.js"; }, { once: true });
-    });
-    document.querySelectorAll("[data-config]").forEach(el => {
-      const key = el.getAttribute("data-config");
-      if (config[key]) el.textContent = config[key];
-    });
-    document.querySelectorAll("[data-contact-phone]").forEach(el => {
-      el.textContent = config.phone || "Add your school phone";
-      if (el.tagName === "A") el.href = "tel:" + (config.phone || "").replace(/[^+0-9]/g, "");
-    });
-    document.querySelectorAll("[data-contact-email]").forEach(el => {
-      el.textContent = config.email || "Add your school email";
-      if (el.tagName === "A") el.href = "mailto:" + (config.email || "");
-    });
-    document.querySelectorAll("[data-contact-address]").forEach(el => el.textContent = config.address || "Add your school address");
-    document.querySelectorAll("[data-year]").forEach(el => el.textContent = new Date().getFullYear());
-
-    // One consistent navigation system across all school pages.
-    const nav = document.querySelector(".nav-links");
-    if (nav) {
-      nav.innerHTML = [
-        '<a href="index.html">Home</a>',
-        '<a href="notices.html">Notices <span class="nav-notice-dot" aria-hidden="true"></span></a>',
-        '<a href="teachers.html">Teachers</a>',
-        '<div class="nav-dropdown"><button type="button" class="nav-dropdown-toggle" aria-expanded="false">Community <span aria-hidden="true">⌄</span></button><div class="nav-dropdown-menu">',
-        '<a href="students.html">Student hub</a><a href="guardians.html">Guardian hub</a><a href="complaints.html">Complaints & feedback</a><a href="academics.html">Academics</a><a href="campus-life.html">Campus life</a><a href="news.html">News & events</a>',
-        '</div></div>',
-        '<a href="about.html">About</a><a href="admissions.html">Admissions</a><a href="contact.html">Contact</a>'
-      ].join("");
-      const current = location.pathname.split("/").pop() || "index.html";
-      nav.querySelectorAll("a").forEach(a => {
-        if (a.getAttribute("href") === current) a.setAttribute("aria-current", "page");
-      });
-      const dropdown = nav.querySelector(".nav-dropdown");
-      const dropdownButton = nav.querySelector(".nav-dropdown-toggle");
-      const selected = nav.querySelector('.nav-dropdown-menu a[aria-current="page"]');
-      if (selected && dropdownButton) dropdownButton.classList.add("has-current");
-      if (dropdown && dropdownButton) dropdownButton.addEventListener("click", () => {
-        const open = dropdown.classList.toggle("open");
-        dropdownButton.setAttribute("aria-expanded", String(open));
-      });
-      document.addEventListener("click", event => {
-        if (dropdown && !dropdown.contains(event.target)) {
-          dropdown.classList.remove("open");
-          dropdownButton?.setAttribute("aria-expanded", "false");
-        }
-      });
-      document.addEventListener("keydown", event => {
-        if (event.key === "Escape" && dropdown) {
-          dropdown.classList.remove("open");
-          dropdownButton?.setAttribute("aria-expanded", "false");
-          document.querySelector(".nav-toggle")?.focus();
-        }
-      });
-    }
-
-    const menuButton = document.querySelector(".nav-toggle");
-    const navContainer = document.querySelector(".nav-links");
-    if (menuButton && navContainer) {
-      menuButton.addEventListener("click", () => {
-        const open = menuButton.getAttribute("aria-expanded") === "true";
-        menuButton.setAttribute("aria-expanded", String(!open));
-        navContainer.classList.toggle("is-open", !open);
-        menuButton.innerHTML = open ? "☰ <span>Menu</span>" : "✕ <span>Close</span>";
-      });
-      navContainer.querySelectorAll("a").forEach(link => link.addEventListener("click", () => {
-        menuButton.setAttribute("aria-expanded", "false");
-        navContainer.classList.remove("is-open");
-        menuButton.innerHTML = "☰ <span>Menu</span>";
-      }));
-    }
-
-    // Scroll reveals; reduced motion users receive an immediate, readable layout.
-    const revealSelector = ".reveal, .glass-card-v2, .info-card-v2, .notice-row-v2, .notice-card-v2, .access-card-v2, .teacher-card-v2, .portal-module-v2, .image-overlay-card, .kpi-v2, .timeline-v2-item, .section-v2-head";
-    const revealItems = [...document.querySelectorAll(revealSelector)];
-    revealItems.forEach((el, i) => {
-      el.classList.add("reveal-item");
-      el.style.setProperty("--reveal-delay", ((i % 4) * 75) + "ms");
-    });
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) {
-      revealItems.forEach(el => el.classList.add("is-visible"));
-    } else {
-      const revealObserver = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) { entry.target.classList.add("is-visible"); revealObserver.unobserve(entry.target); }
-        });
-      }, { threshold: 0.1, rootMargin: "0px 0px -35px 0px" });
-      revealItems.forEach(el => revealObserver.observe(el));
-    }
-
-    // Number count-up for small impact metrics.
-    document.querySelectorAll("[data-count]").forEach(el => {
-      const target = Number(el.dataset.count);
-      if (!Number.isFinite(target)) return;
-      if (matchMedia("(prefers-reduced-motion: reduce)").matches) { el.textContent = target.toLocaleString(); return; }
-      const counterObserver = new IntersectionObserver(entries => entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        const start = performance.now(), duration = 1200;
-        const tick = now => {
-          const progress = Math.min(1, (now - start) / duration);
-          el.textContent = Math.round(target * (1 - Math.pow(1-progress, 3))).toLocaleString();
-          if (progress < 1) requestAnimationFrame(tick);
-        };
-        requestAnimationFrame(tick); counterObserver.disconnect();
-      }), { threshold: 0.5 });
-      counterObserver.observe(el);
-    });
-
-    const handleScroll = () => {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      const pct = max > 0 ? (window.scrollY / max) * 100 : 0;
-      const progress = document.getElementById("scroll-progress");
-      if (progress) progress.style.width = pct + "%";
-      document.getElementById("back-to-top")?.classList.toggle("visible", window.scrollY > 600);
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true }); handleScroll();
-    if (matchMedia("(pointer:fine)").matches && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      window.addEventListener("pointermove", e => {
-        document.body.style.setProperty("--pointer-x", e.clientX + "px");
-        document.body.style.setProperty("--pointer-y", e.clientY + "px");
-      }, { passive: true });
-    }
-
-    // Filterable notice/news/teacher cards with optional text search.
-    document.querySelectorAll("[data-filter-group]").forEach(group => {
-      const buttons = group.querySelectorAll("[data-filter]");
-      const scope = group.closest("[data-filter-scope]") || group.parentElement || document;
-      const cards = [...scope.querySelectorAll("[data-filter-card]")];
-      const search = scope.querySelector("[data-search-input]");
-      let filter = "all", query = "";
-      const apply = () => {
-        let visible = 0;
-        cards.forEach(card => {
-          const category = card.getAttribute("data-category") || "all";
-          const text = (card.innerText || "").toLowerCase();
-          const match = (filter === "all" || category === filter) && (!query || text.includes(query));
-          card.hidden = !match; if (match) visible++;
-        });
-        const empty = scope.querySelector("[data-empty-state]");
-        if (empty) empty.hidden = visible !== 0;
-      };
-      buttons.forEach(button => button.addEventListener("click", () => {
-        buttons.forEach(b => b.classList.toggle("active", b === button));
-        filter = button.getAttribute("data-filter") || "all"; apply();
-      }));
-      search?.addEventListener("input", () => { query = search.value.trim().toLowerCase(); apply(); });
-      apply();
-    });
-
-    // Complaint page: anonymous option hides identity fields.
-    document.querySelectorAll("[data-anonymous-toggle]").forEach(toggle => toggle.addEventListener("change", () => {
-      const form = toggle.closest("form");
-      const identity = form?.querySelector("[data-identity-fields]");
-      if (identity) identity.hidden = toggle.checked;
-      identity?.querySelectorAll("input").forEach(input => { input.required = !toggle.checked && input.dataset.required === "true"; });
-    }));
-
-    // Student demo task checklist (browser memory only).
-    document.querySelectorAll("[data-task-check]").forEach(box => box.addEventListener("change", () => {
-      const item = box.closest("[data-task-item]");
-      item?.classList.toggle("task-done", box.checked);
-      const status = document.querySelector("[data-task-progress]");
-      const all = [...document.querySelectorAll("[data-task-check]")];
-      if (status) status.textContent = all.filter(el => el.checked).length + " of " + all.length + " tasks complete · demo only";
-    }));
-
-    // All forms are clearly marked front-end demos, and nothing is transmitted/stored.
-    document.querySelectorAll("form[data-demo-form]").forEach(form => form.addEventListener("submit", event => {
-      event.preventDefault();
-      const message = form.querySelector(".form-message");
-      if (message) message.textContent = form.dataset.demoMessage || "Thanks. This is a demo form; nothing has been sent or stored. Connect an approved school service before using it.";
-      form.reset();
-      const identity = form.querySelector("[data-identity-fields]");
-      if (identity) identity.hidden = false;
-    }));
-
-    document.querySelectorAll("[data-demo-action]").forEach(button => button.addEventListener("click", () => {
-      const target = button.getAttribute("data-demo-action");
-      const status = document.querySelector("[data-action-status]");
-      if (status) status.textContent = target || "This action is a preview only and is not connected to a school system.";
-    }));
-  });
+"use strict";
+const C=window.SCHOOL_CONFIG||{},REPO=C.dataRepo||"s18211190154-ux/schoolbyalif",BRANCH=C.dataBranch||"main";
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const safeUrl=v=>/^(https?:|mailto:|tel:|\/|#)/i.test(String(v||""))?String(v):"#";
+const dateLabel=v=>{if(!v)return"Date to be confirmed";const d=new Date(v+"T12:00:00");return Number.isNaN(d.getTime())?String(v):d.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});};
+const dateBox=v=>{const d=new Date((v||"")+"T12:00:00");return Number.isNaN(d.getTime())?{day:"—",month:"TBC"}:{day:d.getDate(),month:d.toLocaleDateString(undefined,{month:"short"})};};
+function setTheme(t){const theme=t==="dark"?"dark":"light";document.documentElement.dataset.theme=theme;const b=$("theme-toggle");if(b){b.innerHTML=theme==="dark"?"☀ <span>Light</span>":"☾ <span>Dark</span>";b.setAttribute("aria-label",theme==="dark"?"Switch to light mode":"Switch to dark mode");b.setAttribute("aria-pressed",String(theme==="dark"));}}
+try{setTheme(localStorage.getItem("schoolbyalif-theme")||"light")}catch{setTheme("light")}
+function header(){return '<div class="container nav-wrap"><a class="brand" href="index.html" aria-label="School by Alif home"><span class="brand-mark">SA</span><span class="brand-copy"><strong data-school-name>School by Alif</strong><small>LEARN · GROW · BELONG</small></span></a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">☰ <span>Menu</span></button><nav class="nav-links" id="site-nav" aria-label="Main navigation"><a href="index.html">Home</a><a href="notices.html">Notices</a><a href="teachers.html">Teachers</a><a href="students.html">Students</a><a href="guardians.html">Guardians</a><div class="nav-more"><button type="button" class="nav-more-button" aria-expanded="false">School <span aria-hidden="true">⌄</span></button><div class="nav-more-menu"><a href="about.html">About the school</a><a href="academics.html">Academics</a><a href="campus-life.html">Campus life</a><a href="news.html">News & events</a><a href="admissions.html">Admissions</a><a href="complaints.html">Complaints & feedback</a><a href="contact.html">Contact</a></div></div></nav><div class="nav-utility"><button type="button" class="theme-toggle" id="theme-toggle">☾ <span>Dark</span></button><a class="btn btn-sm nav-cta" href="admissions.html">Admissions ↗</a></div></div>';}
+function footer(){return '<div class="container"><div class="footer-grid"><div class="footer-brand"><a class="brand" href="index.html"><span class="brand-mark">SA</span><span class="brand-copy"><strong data-school-name>School by Alif</strong><small>LEARN · GROW · BELONG</small></span></a><p>A clear, welcoming school website for students, teachers and families — all in one place.</p><div class="social-row"><a href="#" aria-label="Facebook">f</a><a href="#" aria-label="Instagram">◎</a><a href="#" aria-label="YouTube">▶</a></div></div><div class="footer-col"><h3>Explore</h3><a href="about.html">About the school</a><a href="academics.html">Academics</a><a href="campus-life.html">Campus life</a><a href="news.html">News & events</a><a href="admissions.html">Admissions</a></div><div class="footer-col"><h3>School community</h3><a href="notices.html">Notice board</a><a href="teachers.html">Teacher directory</a><a href="students.html">Student information</a><a href="guardians.html">Guardian comments</a><a href="complaints.html">Complaints & feedback</a></div><div class="footer-col"><h3>Contact</h3><a data-contact-address href="contact.html">School address</a><a data-contact-phone href="tel:+8801000000000">School phone</a><a data-contact-email href="mailto:hello@schoolbyalif.example">School email</a><p style="font-size:.69rem;margin-top:10px">Contact details are examples.</p></div></div><div class="footer-bottom"><span>© <span data-year></span> <span data-school-name>School by Alif</span>. Sample website content.</span><span><a href="privacy.html">Privacy</a><a href="accessibility.html">Accessibility</a></span></div></div>';}
+function setupShell(){
+document.querySelector(".site-header")?.replaceChildren();const h=document.querySelector(".site-header");if(h)h.innerHTML=header();const f=document.querySelector(".site-footer");if(f)f.innerHTML=footer();
+document.querySelectorAll("[data-school-name]").forEach(e=>e.textContent=C.name||"School by Alif");document.querySelectorAll("[data-year]").forEach(e=>e.textContent=new Date().getFullYear());
+document.querySelectorAll("[data-contact-phone]").forEach(e=>{e.textContent=C.phone||"Add school phone";if(e.tagName==="A")e.href="tel:"+String(C.phone||"").replace(/[^+0-9]/g,"")});
+document.querySelectorAll("[data-contact-email]").forEach(e=>{e.textContent=C.email||"Add school email";if(e.tagName==="A")e.href="mailto:"+C.email});
+document.querySelectorAll("[data-contact-address]").forEach(e=>e.textContent=C.address||"Add school address");
+$("theme-toggle")?.addEventListener("click",()=>{const next=document.documentElement.dataset.theme==="dark"?"light":"dark";setTheme(next);try{localStorage.setItem("schoolbyalif-theme",next)}catch{}});
+const nav=document.querySelector(".nav-links"),menu=document.querySelector(".nav-toggle"),more=nav?.querySelector(".nav-more"),mb=nav?.querySelector(".nav-more-button"),current=location.pathname.split("/").pop()||"index.html";
+nav?.querySelectorAll("a").forEach(a=>{if(a.getAttribute("href")===current){a.setAttribute("aria-current","page");if(a.closest(".nav-more"))mb?.classList.add("current")}a.addEventListener("click",()=>{nav.classList.remove("is-open");menu?.setAttribute("aria-expanded","false");if(menu)menu.innerHTML="☰ <span>Menu</span>"});});
+mb?.addEventListener("click",()=>{const open=more.classList.toggle("open");mb.setAttribute("aria-expanded",String(open))});
+document.addEventListener("click",e=>{if(more&&!more.contains(e.target)){more.classList.remove("open");mb?.setAttribute("aria-expanded","false")}});
+menu?.addEventListener("click",()=>{const open=menu.getAttribute("aria-expanded")==="true";menu.setAttribute("aria-expanded",String(!open));nav?.classList.toggle("is-open",!open);menu.innerHTML=open?"☰ <span>Menu</span>":"✕ <span>Close</span>"});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){more?.classList.remove("open");mb?.setAttribute("aria-expanded","false");nav?.classList.remove("is-open");menu?.setAttribute("aria-expanded","false")}});
+}
+async function loadCollection(folder){
+const api="https://api.github.com/repos/"+REPO+"/contents/data/"+encodeURIComponent(folder)+"?ref="+encodeURIComponent(BRANCH);
+const response=await fetch(api,{headers:{"Accept":"application/vnd.github+json"}});
+if(!response.ok)throw new Error("Data folder request failed: "+response.status);
+const files=await response.json();if(!Array.isArray(files))throw new Error("Data folder listing not available");
+const jsonFiles=files.filter(f=>f.type==="file"&&f.name.toLowerCase().endsWith(".json"));
+const values=await Promise.all(jsonFiles.map(async f=>{const r=await fetch(f.download_url||("https://raw.githubusercontent.com/"+REPO+"/"+BRANCH+"/data/"+folder+"/"+f.name));if(!r.ok)throw new Error("Cannot load "+f.name);return r.json()}));
+return values.flatMap(v=>Array.isArray(v)?v:[v]).filter(Boolean);
+}
+function dataError(root,folder){if(root)root.innerHTML='<div class="demo-alert"><strong>Could not load this data folder.</strong> Check the JSON files or <a class="text-link" href="https://github.com/'+esc(REPO)+'/tree/'+esc(BRANCH)+'/data/'+esc(folder)+'">open the folder on GitHub ↗</a>, then reload this page.</div>';}
+function noticeHtml(n){const cat=String(n.category||"general").toLowerCase(),cls=cat==="urgent"||n.priority==="urgent"?"urgent":cat==="events"?"event":cat==="academic"?"academic":"";const attachment=n.attachment?'<p style="margin-top:12px"><a class="text-link" href="'+esc(safeUrl(n.attachment))+'" target="_blank" rel="noopener">Open attachment ↗</a></p>':n.link?'<p style="margin-top:12px"><a class="text-link" href="'+esc(safeUrl(n.link))+'">Read more ↗</a></p>':"";return '<article class="notice-card reveal" data-filter-card data-category="'+esc(cat)+'"><div class="notice-card-top"><span class="notice-label '+cls+'">'+esc(n.label||cat)+'</span><span class="notice-date">'+esc(dateLabel(n.date))+'</span></div><h3>'+esc(n.title)+'</h3><p>'+esc(n.summary||n.description||"")+'</p><div class="notice-meta"><span>'+esc(n.audience||"School community")+'</span><span>'+esc(n.id||"Sample notice")+'</span></div>'+attachment+'</article>';}
+function teacherHtml(t){return '<article class="teacher-card reveal" data-filter-card data-category="'+esc(String(t.department||t.subject||"general").toLowerCase())+'"><img src="'+esc(safeUrl(t.photo||C.images?.teacher1||""))+'" alt="'+esc("Example portrait of "+(t.name||"teacher"))+'" loading="lazy"><div class="teacher-info"><span class="tag">'+esc(t.department||"Faculty")+'</span><h3>'+esc(t.name||"Example Teacher")+'</h3><div class="role">'+esc(t.role||t.subject||"Teacher")+'</div><p>'+esc(t.bio||"")+'</p></div></article>';}
+function studentHtml(s){const initials=String(s.name||"Example Student").split(/\s+/).slice(0,2).map(v=>v[0]).join("").toUpperCase();const cat=String(s.grade||"other").toLowerCase().replace(/[^a-z0-9]+/g,"-");return '<article class="student-record reveal" data-filter-card data-category="'+esc(cat)+'"><div class="student-record-head"><span class="student-avatar">'+esc(initials)+'</span><div><h3>'+esc(s.name||"Example Student")+'</h3><p>'+esc(s.student_id||"DEMO-ID")+' · '+esc(s.grade||"Class —")+'</p></div></div><div class="student-metrics"><div class="student-metric"><span>Section / roll</span><b>'+esc(s.section||"—")+' / '+esc(s.roll||"—")+'</b></div><div class="student-metric"><span>Attendance</span><b>'+esc(s.attendance??"—")+(s.attendance!==undefined?"%":"")+'</b></div><div class="student-metric"><span>Learning status</span><b>'+esc(s.status||"Example")+'</b></div><div class="student-metric"><span>Focus area</span><b>'+esc(s.focus||"General learning")+'</b></div></div><p style="font-size:.73rem;margin:12px 0 0">'+esc(s.note||"Fictional demo data only.")+'</p></article>';}
+function commentHtml(c){return '<article class="comment-card"><div class="comment-top"><div class="comment-author"><span class="comment-avatar">'+esc(String(c.author||"G").slice(0,1).toUpperCase())+'</span><span><b>'+esc(c.author||"Example Guardian")+'</b><small>'+esc(c.date||"Sample comment")+'</small></span></div><span class="tag blue">'+esc(c.category||"Community")+'</span></div><p>'+esc(c.comment||c.message||"")+'</p>'+(c.response?'<div class="comment-response"><b>Example school response</b>'+esc(c.response)+'</div>':"")+'</article>';}
+function filters(scope){
+if(!scope)return;scope.querySelectorAll("[data-filter-group]").forEach(group=>{if(group.dataset.ready==="1")return;group.dataset.ready="1";const buttons=[...group.querySelectorAll("[data-filter]")],search=scope.querySelector("[data-search-input]"),cards=[...scope.querySelectorAll("[data-filter-card]")];let filter="all",query="";
+const apply=()=>{let count=0;cards.forEach(card=>{const cat=String(card.dataset.category||"general").toLowerCase(),text=(card.innerText||"").toLowerCase();const ok=(filter==="all"||cat===filter||(filter==="urgent"&&card.querySelector(".notice-label.urgent")))&&(!query||text.includes(query));card.hidden=!ok;if(ok)count++});const empty=scope.querySelector("[data-empty-state]");if(empty)empty.hidden=count>0;};
+buttons.forEach(b=>b.addEventListener("click",()=>{buttons.forEach(x=>x.classList.toggle("active",x===b));filter=b.dataset.filter||"all";apply()}));
+if(search&&!search.dataset.ready){search.dataset.ready="1";search.addEventListener("input",()=>{query=search.value.trim().toLowerCase();apply()})}apply();});
+}
+async function populate(folder,id,renderer,limit){const root=$(id);if(!root)return[];try{let list=await loadCollection(folder);list.sort((a,b)=>String(b.date||b.name||"").localeCompare(String(a.date||a.name||"")));if(limit)list=list.slice(0,limit);root.innerHTML=list.length?list.map(renderer).join(""):'<div class="empty-state">No items yet. Add JSON files in data/'+esc(folder)+'/.</div>';filters(root.closest("[data-filter-scope]")||root.parentElement);reveals(root);const count=$(id+"-count");if(count)count.textContent=list.length;return list}catch(e){console.error("Unable to load "+folder,e);dataError(root,folder);return[]}}
+function reveals(scope=document){const items=scope.querySelectorAll(".reveal:not(.in-view)");if(matchMedia("(prefers-reduced-motion: reduce)").matches||!("IntersectionObserver"in window)){items.forEach(x=>x.classList.add("in-view"));return}const io=new IntersectionObserver(entries=>entries.forEach(en=>{if(en.isIntersecting){en.target.classList.add("in-view");io.unobserve(en.target)}}),{threshold:.08,rootMargin:"0px 0px -15px 0px"});items.forEach(x=>io.observe(x));}
+function initForms(){document.querySelectorAll("form[data-demo-form]").forEach(form=>form.addEventListener("submit",e=>{e.preventDefault();const msg=form.querySelector(".form-message");if(msg)msg.textContent=form.dataset.demoMessage||"Preview only: nothing was sent or saved. Connect a secure school service before using this form.";form.reset()}));
+const form=$("guardian-comment-form");form?.addEventListener("submit",e=>{e.preventDefault();const d=new FormData(form),item={author:d.get("author")||"Example Guardian",date:"Just now · local preview",category:d.get("category")||"General",comment:d.get("comment")||""};const root=$("guardian-comments");if(root){const wrap=document.createElement("div");wrap.innerHTML=commentHtml(item);root.prepend(wrap.firstElementChild)}const status=$("guardian-comment-status");if(status)status.textContent="Preview added to this page only. It has not been saved or sent to the school.";form.reset()});}
+function extras(){if(!$("scroll-progress")){const p=document.createElement("div");p.id="scroll-progress";p.setAttribute("aria-hidden","true");document.body.append(p)}if(!$("back-to-top")){const b=document.createElement("button");b.id="back-to-top";b.type="button";b.setAttribute("aria-label","Back to top");b.textContent="↑";document.body.append(b);b.addEventListener("click",()=>window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"}))}const scroll=()=>{const max=document.documentElement.scrollHeight-innerHeight;$("scroll-progress").style.width=(max>0?scrollY/max*100:0)+"%";$("back-to-top").classList.toggle("visible",scrollY>450)};window.addEventListener("scroll",scroll,{passive:true});scroll();reveals();}
+document.addEventListener("DOMContentLoaded",()=>{setupShell();document.querySelectorAll("[data-image]").forEach(img=>{const url=C.images?.[img.dataset.image];if(url)img.src=url;img.addEventListener("error",()=>{img.alt=(img.alt||"Example image")+" — change its URL in assets/js/site-config.js";},{once:true})});document.querySelectorAll("[data-config]").forEach(el=>{if(C[el.dataset.config])el.textContent=C[el.dataset.config]});filters(document);initForms();extras();if($("notice-list"))populate("notices","notice-list",noticeHtml);if($("home-notices"))populate("notices","home-notices",noticeHtml,3);if($("teacher-list"))populate("teachers","teacher-list",teacherHtml);if($("home-teachers"))populate("teachers","home-teachers",teacherHtml,3);if($("student-list"))populate("students","student-list",studentHtml);if($("guardian-comments"))populate("guardian-comments","guardian-comments",commentHtml);});
 })();
