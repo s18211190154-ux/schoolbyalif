@@ -49,3 +49,18 @@ Enable GitHub Pages in repository Settings → Pages → Deploy from a branch �
 School site usability: https://www.bexratech.com/blog/school-website-checklist
 WCAG contrast guidance: https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum
 Motion accessibility guidance: https://www.w3.org/WAI/WCAG22/Understanding/animation-from-interactions
+
+
+## Edit every website image in one file
+
+Open **[assets/js/site-config.js](assets/js/site-config.js)**. This is the central image settings file. Paste a direct image URL between the quotation marks beside the image you want to replace, then commit the change to GitHub.
+
+- `images.background`: background photo behind the glass UI.
+- `images.hero`, `campus`, `classroom`, `library`, `sports`, `arts`, `science`, and `leadership`: reusable page/section photos wherever the matching `data-image` key is used.
+- `images.teacher1` through `images.teacher6`: default teacher portrait images.
+- `noticeImages`: paste an image URL beside a notice ID such as `NOTICE-DEMO-001` through `NOTICE-DEMO-004`. The picture appears on that notice card without editing its JSON file.
+- `teacherImages` and `studentImages`: optional per-person image overrides; add an entry keyed by that record's ID or name.
+
+Use a **direct image URL** (usually JPG, PNG or WEBP). A Google Drive or Dropbox preview/share page may not display as an image. Blank notice image entries mean no image is set for that notice. Save/commit the file and refresh the site to see the changes.
+
+This is only a visual configuration feature. It does not add a backend or change how school forms are submitted.
