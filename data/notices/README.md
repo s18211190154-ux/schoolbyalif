@@ -1,10 +1,7 @@
-# Notices upload folder
+# Notices folder
 
-You can add a notice in either of these ways:
+Upload a notice PDF or image (PDF, JPG, JPEG, PNG, WebP) directly into this folder and commit it to main. It will appear automatically on page load. For files with a date in the name, start the filename with YYYY-MM-DD. Or add a JSON/CSV row for a full title, date, description and audience.
 
-1. **Upload a PDF or image directly**: JPG, JPEG, PNG, WebP, or PDF. Name it something clear, preferably starting with a date such as `2026-11-03-holiday.pdf`. It will appear as a notice card automatically.
-2. **Use JSON**: copy `notice-template.json` and add a new JSON file for a title, date, category, description and optional attachment link. This gives the notice a better summary and audience label.
+For CSV, copy notice-template.csv, add rows and rename the file so its name does not contain “template”. For JSON, copy notice-template.json and rename it.
 
-Commit the file to the `main` branch. The site reads the folder on page load, so no HTML edit is necessary. The template itself is excluded from display.
-
-Do not upload confidential notices, private student details, or information that should only be visible after staff/guardian sign-in. This repository is public.
+The repository is public: do not upload confidential notices or private student information.

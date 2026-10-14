@@ -24,30 +24,55 @@ document.addEventListener("click",e=>{if(more&&!more.contains(e.target)){more.cl
 menu?.addEventListener("click",()=>{const open=menu.getAttribute("aria-expanded")==="true";menu.setAttribute("aria-expanded",String(!open));nav?.classList.toggle("is-open",!open);menu.innerHTML=open?"☰ <span>Menu</span>":"✕ <span>Close</span>"});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){more?.classList.remove("open");mb?.setAttribute("aria-expanded","false");nav?.classList.remove("is-open");menu?.setAttribute("aria-expanded","false")}});
 }
+function parseCsv(text){
+ const rows=[];let row=[],field="",quoted=false;
+ for(let i=0;i<text.length;i++){
+  const ch=text[i];
+  if(quoted){
+   if(ch==='"'&&text[i+1]==='"'){field+='"';i++;}
+   else if(ch==='"')quoted=false;
+   else field+=ch;
+  }else if(ch==='"')quoted=true;
+  else if(ch===","){row.push(field);field="";}
+  else if(ch==="\n"||ch==="\r"){
+   if(ch==="\r"&&text[i+1]==="\n")i++;
+   row.push(field);field="";
+   if(row.some(v=>String(v).trim()!==""))rows.push(row);
+   row=[];
+  }else field+=ch;
+ }
+ if(field!==""||row.length){row.push(field);if(row.some(v=>String(v).trim()!==""))rows.push(row);}
+ if(rows.length<2)return [];
+ const headers=rows.shift().map(h=>String(h).trim().replace(/^\uFEFF/,""));
+ return rows.map(values=>{
+  const item={};
+  headers.forEach((h,i)=>{if(h)item[h]=String(values[i]??"").trim();});
+  return item;
+ }).filter(item=>Object.values(item).some(v=>v!==""));
+}
 async function loadCollection(folder){
-const api="https://api.github.com/repos/"+REPO+"/contents/data/"+encodeURIComponent(folder)+"?ref="+encodeURIComponent(BRANCH);
-const response=await fetch(api,{headers:{"Accept":"application/vnd.github+json"}});
-if(!response.ok)throw new Error("Data folder request failed: "+response.status);
-const files=await response.json();if(!Array.isArray(files))throw new Error("Data folder listing not available");
-const usable=files.filter(f=>f.type==="file"&&!f.name.toLowerCase().includes("template"));
-const jsonFiles=usable.filter(f=>f.name.toLowerCase().endsWith(".json"));
-const records=await Promise.all(jsonFiles.map(async f=>{
- const r=await fetch(f.download_url||("https://raw.githubusercontent.com/"+REPO+"/"+BRANCH+"/data/"+folder+"/"+f.name));
- if(!r.ok)throw new Error("Cannot load "+f.name);
- return r.json();
-}));
-const structured=records.flatMap(v=>Array.isArray(v)?v:[v]).filter(Boolean);
-if(folder!=="notices")return structured;
-const attachments=usable.filter(f=>/\.(pdf|png|jpe?g|webp)$/i.test(f.name)).map(f=>{
- const stem=f.name.replace(/\.[^.]+$/,"");
- const rawDate=(f.name.match(/\d{4}-\d{2}-\d{2}/)||[])[0]||"";
- const pretty=stem.replace(/^\d{4}-\d{2}-\d{2}[-_]?/,"").replace(/[-_]+/g," ").replace(/\b\w/g,ch=>ch.toUpperCase());
- const lower=f.name.toLowerCase();
- const category=/urgent|important|emergency/.test(lower)?"urgent":/exam|assessment|result|academic/.test(lower)?"academic":/event|meeting|holiday|sports/.test(lower)?"events":"general";
- const image=/\.(png|jpe?g|webp)$/i.test(f.name);
- return {id:"FILE-"+f.name,title:pretty||f.name,date:rawDate,category,priority:category==="urgent"?"important":"normal",label:image?"Notice image":"Notice attachment",summary:image?"Image notice uploaded to the notices folder. Add a matching JSON file if you want a longer description.":"Document uploaded to the notices folder. Open the attachment to read the full notice.",audience:"School community",attachment:f.download_url||f.html_url,image:image?(f.download_url||f.html_url):"",fileName:f.name};
-});
-return [...structured,...attachments];
+ const api="https://api.github.com/repos/"+REPO+"/contents/data/"+encodeURIComponent(folder)+"?ref="+encodeURIComponent(BRANCH);
+ const response=await fetch(api,{headers:{"Accept":"application/vnd.github+json"},cache:"no-store"});
+ if(!response.ok)throw new Error("Data folder request failed: "+response.status);
+ const files=await response.json();if(!Array.isArray(files))throw new Error("Data folder listing not available");
+ const usable=files.filter(f=>f.type==="file"&&!f.name.toLowerCase().includes("template"));
+ const structuredFiles=usable.filter(f=>/\.(json|csv)$/i.test(f.name));
+ const records=await Promise.all(structuredFiles.map(async f=>{
+  const r=await fetch(f.download_url||("https://raw.githubusercontent.com/"+REPO+"/"+BRANCH+"/data/"+folder+"/"+f.name),{cache:"no-store"});
+  if(!r.ok)throw new Error("Cannot load "+f.name);
+  return /\.csv$/i.test(f.name)?parseCsv(await r.text()):r.json();
+ }));
+ const structured=records.flatMap(v=>Array.isArray(v)?v:[v]).filter(Boolean);
+ if(folder!=="notices")return structured;
+ const attachments=usable.filter(f=>/\.(pdf|png|jpe?g|webp)$/i.test(f.name)).map(f=>{
+  const stem=f.name.replace(/\.[^.]+$/,""),rawDate=(f.name.match(/\d{4}-\d{2}-\d{2}/)||[])[0]||"";
+  const pretty=stem.replace(/^\d{4}-\d{2}-\d{2}[-_]?/,"").replace(/[-_]+/g," ").replace(/\b\w/g,ch=>ch.toUpperCase());
+  const lower=f.name.toLowerCase();
+  const category=/urgent|important|emergency/.test(lower)?"urgent":/exam|assessment|result|academic/.test(lower)?"academic":/event|meeting|holiday|sports/.test(lower)?"events":"general";
+  const image=/\.(png|jpe?g|webp)$/i.test(f.name);
+  return {id:"FILE-"+f.name,title:pretty||f.name,date:rawDate,category,priority:category==="urgent"?"important":"normal",label:image?"Notice image":"Notice attachment",summary:image?"Image notice uploaded to this folder. Add a JSON or CSV row if you want a longer description.":"Document uploaded to this folder. Open the attachment to read the full notice.",audience:"School community",attachment:f.download_url||f.html_url,image:image?(f.download_url||f.html_url):"",fileName:f.name};
+ });
+ return [...structured,...attachments];
 }
 function dataError(root,folder){if(root)root.innerHTML='<div class="demo-alert"><strong>Could not load this data folder.</strong> Check the JSON files or <a class="text-link" href="https://github.com/'+esc(REPO)+'/tree/'+esc(BRANCH)+'/data/'+esc(folder)+'">open the folder on GitHub ↗</a>, then reload this page.</div>';}
 function noticeHtml(n){

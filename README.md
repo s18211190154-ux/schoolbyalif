@@ -1,33 +1,48 @@
-# School by Alif — Light Edition
-A mobile-optimised, multi-page school website using HTML, CSS and vanilla JavaScript. Clean white/ivory surfaces, readable Plus Jakarta Sans + DM Sans typography, green and sky-blue accents, subtle glass panels, light/dark mode, and reduced-motion-aware animations.
+# School by Alif — light and responsive school website
+
+A multi-page school site built with HTML/CSS/JavaScript: light-first theme with optional dark mode, white/ivory backgrounds, sage green and sky-blue accents, readable Plus Jakarta Sans + DM Sans typography, subtle frosted-glass panels, responsive layouts and reduced-motion-aware transitions.
 
 ## Pages
-Home, Notices, Teachers, Students (demo records), Guardians (comments preview), Complaints & Feedback, About, Academics, Campus Life, News, Admissions, Contact, Privacy, Accessibility.
+Home, Notices, Teachers, Students (fictional demo records), Guardians (sample comments), Complaints & Feedback, About, Academics, Campus Life, News, Admissions, Contact, Privacy, Accessibility and a 404 page.
 
-## Automatically add content via folders
-The site reads public GitHub folder listings and loads JSON files automatically:
-- `data/notices/`: public school notices
-- `data/teachers/`: approved staff-directory profiles
-- `data/students/`: **fictional demo records only in this public repository**
-- `data/guardian-comments/`: fictional sample comments only
+## Add content using folders
 
-To add a notice, upload either (A) a `.json` file with title/date/category/summary, or (B) a notice image (`.jpg`, `.jpeg`, `.png`, `.webp`) or PDF directly into `data/notices/`. Commit to `main`; on next page load the site scans the folder and displays the new file automatically. Image/PDF filenames become the title, and dates are inferred from a `YYYY-MM-DD` prefix when present. For richer descriptions, pair an asset with a JSON file. Use one JSON file per teacher or example student record.
+The website reads the public GitHub folders when a data page loads. Add a file to the relevant folder and commit it to \`main\`; no HTML editing is needed.
 
-Notice fields: `id`, `title`, `date` (YYYY-MM-DD), `category` (urgent, academic, events, general), `priority`, `summary`, `audience`, optional `attachment` or `link`.
+- \`data/notices/\`: JSON or CSV announcements, plus PDF/image notices (\`pdf\`, \`jpg\`, \`jpeg\`, \`png\`, \`webp\`). Give attachment files a useful filename; a leading \`YYYY-MM-DD\` is displayed as its date.
+- \`data/teachers/\`: JSON or CSV staff directory data.
+- \`data/students/\`: JSON or CSV **fictional demo records only** in this public repository.
+- \`data/guardian-comments/\`: JSON or CSV fictional sample comments only.
 
-## Important privacy note
-This repository and GitHub Pages site are public. All current student records and guardian comments are fictional examples. **Never add real student names, IDs, class/roll numbers, attendance, grades, reports, guardian details, confidential comments, or complaints to public folders.** Real student data needs authentication, server-side access controls, and a private database. Do not put private records inside JavaScript or ship them to the browser on a public site.
+You can use one JSON object per file, a JSON array, or a CSV with one record per row. Files containing the word \`template\` are ignored.
 
-Guardian comments, contact, admissions and complaint forms are previews. The guardian comment form adds an on-screen demonstration only; it is not saved or submitted. Connect secure form/backend services before use.
+### Fields for notice JSON/CSV
+\`id\`, \`title\`, \`date\` (YYYY-MM-DD), \`category\` (urgent, academic, events, general), \`priority\`, \`summary\`, \`audience\`, \`label\`, optional \`attachment\` or \`link\`.
 
-## Customising
-- Name, official contact details, images and data-source settings: `assets/js/site-config.js`.
-- Theme, responsive layout and animation: `assets/css/style.css`.
-- Data loading, theme switch, menus, search and renderers: `assets/js/main.js`.
+### Fields for teacher JSON/CSV
+\`id\`, \`name\`, \`role\`, \`subject\`, \`department\`, \`photo\`, \`bio\`; optional public school email only if approved.
 
-GitHub Pages should be enabled at Settings → Pages → Deploy from a branch → `main` → `/(root)`.
+### Fields for student demo JSON/CSV
+\`id\`, \`name\`, \`student_id\`, \`grade\`, \`section\`, \`roll\`, \`attendance\`, \`status\`, \`focus\`, \`note\`.
 
-## Design references
-School site usability and keeping information current: https://www.schudio.com/what-parents-actually-notice-on-a-school-website/
-W3C accessibility and contrast guidance: https://www.w3.org/TR/WCAG21/
-W3C reduced-motion guidance: https://www.w3.org/WAI/WCAG21/Understanding/animation-from-interactions
+### Fields for guardian-comment JSON/CSV
+\`id\`, \`author\`, \`date\`, \`category\`, \`comment\`, \`response\`.
+
+CSV column names should match the field names above. Include a header row and quote values containing commas or line breaks.
+
+## Critical student-data privacy
+This is a public GitHub repository and public website. Current student and guardian entries are fictional samples. **Never upload real student names, IDs, grades, roll numbers, attendance, reports, private family comments, medical details or complaint reports to this public repository.** Real student data requires an authenticated application, server-side access control and a private database. Do not put private records in public JavaScript/static files.
+
+Guardian comments and contact/admissions/complaint forms are frontend previews. A comment appears temporarily in the current browser only; it is not saved or sent. Connect a secure backend when you are ready.
+
+## Customisation
+- School name, contacts, image URLs and data source: \`assets/js/site-config.js\`
+- Layout, theme colours, dark mode, responsive behaviour: \`assets/css/style.css\`
+- Folder loaders, filters, navigation and interactions: \`assets/js/main.js\`
+
+Enable GitHub Pages in repository Settings → Pages → Deploy from a branch → \`main\` → \`/(root)\` if not already enabled.
+
+## Research references
+School site usability: https://www.bexratech.com/blog/school-website-checklist
+WCAG contrast guidance: https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum
+Motion accessibility guidance: https://www.w3.org/WAI/WCAG22/Understanding/animation-from-interactions
