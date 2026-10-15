@@ -28,7 +28,8 @@ window.SCHOOL_CONFIG = {
   teacher3:"https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=700&q=85",
   teacher4:"https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=700&q=85",
   teacher5:"https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=700&q=85",
-  teacher6:"https://images.unsplash.com/photo-1551836022-4c4c79ecde51?auto=format&fit=crop&w=700&q=85"
+  teacher6:"https://images.unsplash.com/photo-1551836022-4c4c79ecde51?auto=format&fit=crop&w=700&q=85",
+  teacher7:"https://cdn.shopify.com/s/files/1/2621/9594/files/cat-1940487_640.jpg?v=1638544208"
  },
  noticeImages:{
   "NOTICE-DEMO-001":"", /* Assessment reminder image URL */
